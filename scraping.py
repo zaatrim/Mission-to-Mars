@@ -17,12 +17,14 @@ def scrape_all():
           "news_paragraph": news_paragraph,
           "featured_image": featured_image(browser),
           "facts": mars_facts(),
+          "hemispheres": hemisphere_image(browser),
          "last_modified": dt.datetime.now()
     }
 
    # Stop webdriver and return data
     browser.quit()
     return data
+
 def mars_news(browser):
     # In the next cell of your Jupyter notebook, we'll assign the url and instruct the browser to visit it.
     # Visit the mars nasa news site
@@ -85,18 +87,41 @@ def mars_facts():
     try:
         # Use 'read_html' to scrape the facts table into a dataframe
         df = pd.read_html('https://data-class-mars-facts.s3.amazonaws.com/Mars_Facts/index.html')[0]
-
     except BaseException:
         return None
 
     # Assign columns and set index of dataframe
     df.columns=['Description', 'Mars', 'Earth']
     df.set_index('Description', inplace=True)
-
-
  
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+#Declare and define our function.
+def hemisphere_image(browser):
+    # Visit URL
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+    # 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    for i in range(4):
+        hemisphere = {}
+        # We have to find the elements on each loop to avoid a stale element exception
+        browser.find_by_css('a.product-item img')[i].click()
+        # Next, we find the Sample image anchor tag and extract the href
+        sample_elem = browser.links.find_by_text('Sample').first
+        hemisphere['img_url'] = sample_elem['href']
+        # Get Hemisphere title
+        hemisphere['title'] = browser.find_by_css('h2.title').text
+        # Append hemisphere object to list
+        hemisphere_image_urls.append(hemisphere)
+        # Finally, we navigate backwards
+        browser.back()
+        # Convert dataframe into HTML format, add bootstrap
+    return hemisphere_image_urls
+
 
 if __name__ == "__main__":
     # If running as script, print scraped data
